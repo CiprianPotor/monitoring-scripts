@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Define the directory you want to monitor
+DIRECTORY="/var/spool/postfix/incoming/"
+
+# Get the disk usage of the directory in megabytes (MB)
+USAGE_MB=$(du -sm $DIRECTORY | awk '{print $1}')
+
+# Convert the disk usage to gigabytes (GB) for threshold comparison
+USAGE_GB=$(echo "scale=2; $USAGE_MB / 1024" | bc)
+
+# Define warning and critical thresholds in gigabytes (GB)
+WARNING_THRESHOLD_GB=60
+CRITICAL_THRESHOLD_GB=80
+
+# Check if disk usage exceeds the thresholds and generate appropriate output
+if (( $(echo "$USAGE_GB > $CRITICAL_THRESHOLD_GB" | bc -l) )); then
+    echo "CRITICAL - Disk usage postfix incoming is $USAGE_MB MB ($USAGE_GB GB)"
+    exit 2
+elif (( $(echo "$USAGE_GB > $WARNING_THRESHOLD_GB" | bc -l) )); then
+    echo "WARNING - Disk usage postfix incoming is $USAGE_MB MB ($USAGE_GB GB)"
+    exit 1
+else
+    echo "OK - Disk usage postfix incoming is $USAGE_MB MB"
+    exit 0
+fi
